@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shooter Game with Killable Enemies</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      background: #000;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Player
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height - 30,
+      width: 20,
+      height: 20,
+      color: '#00FF00',
+      speed: 5
+    };
+
+    // Bullets
+    const bullets = [];
+    const bulletSpeed = 7;
+
+    // Enemies
+    let enemies = [];
+    const enemySpeed = 2;
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawBullets() {
+      ctx.fillStyle = '#FF0000';
+      bullets.forEach(bullet => {
+        ctx.fillRect(bullet.x, bullet.y, 5, 10);
+      });
+    }
+
+    function drawEnemies() {
+      ctx.fillStyle = '#FFA500';
+      enemies.forEach(enemy => {
+        ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+      });
+    }
+
+    function updateBullets() {
+      bullets.forEach(bullet => {
+        bullet.y -= bulletSpeed;
+      });
+
+      bullets.forEach((bullet, bulletIndex) => {
+        if (bullet.y < 0) {
+          bullets.splice(bulletIndex, 1);
+        }
+
+        // Check for bullet-enemy collision
+        enemies.forEach((enemy, enemyIndex) => {
+          if (
+            bullet.x < enemy.x + enemy.width &&
+            bullet.x + 5 > enemy.x &&
+            bullet.y < enemy.y + enemy.height &&
+            bullet.y + 10 > enemy.y
+          ) {
+            bullets.splice(bulletIndex, 1);
+            enemies.splice(enemyIndex, 1);
+          }
+        });
+      });
+    }
+
+    function updateEnemies() {
+      enemies.forEach(enemy => {
+        enemy.y += enemySpeed;
+      });
+
+      enemies.forEach((enemy, index) => {
+        if (enemy.y > canvas.height) {
+          enemies.splice(index, 1);
+        }
+
+        // Collision with player
+        if (
+          player.x < enemy.x + enemy.width &&
+          player.x + player.width > enemy.x &&
+          player.y < enemy.y + enemy.height &&
+          player.y + player.height > enemy.y
+        ) {
+          gameOver();
+        }
+      });
+    }
+
+    function shoot() {
+      bullets.push({
+        x: player.x + player.width / 2 - 2.5,
+        y: player.y,
+      });
+    }
+
+    function createEnemy() {
+      const enemy = {
+        x: Math.random() * (canvas.width - 20),
+        y: -20,
+        width: 20,
+        height: 20,
+      };
+      enemies.push(enemy);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawPlayer();
+      drawBullets();
+      drawEnemies();
+    }
+
+    function update() {
+      updateBullets();
+      updateEnemies();
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function gameOver() {
+      alert('Game Over!');
+      location.reload();
+    }
+
+    gameLoop();
+
+    // Controls
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'a' || e.key === 'A') {
+        player.x -= player.speed;
+      } else if (e.key === 'd' || e.key === 'D') {
+        player.x += player.speed;
+      }
+    });
+
+    canvas.addEventListener('click', shoot);
+
+    // Mouse Controls
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      player.x = mouseX - player.width / 2;
+    });
+
+    // Create new enemy every second
+    setInterval(createEnemy, 1000);
+
+  </script>
+</body>
+</html>
+
+
+
